@@ -1,0 +1,1 @@
+1. add all the library-specific properties to package.json like author / etc.
