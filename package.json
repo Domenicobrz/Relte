@@ -2,9 +2,18 @@
 	"name": "relte",
 	"version": "0.0.1",
 	"description": "Accessible svelte components, unique in design and functionality",
-	"keywords": ["svelte", "components", "ui", "ux", "accessibility", "a11y", "library", "sveltekit"],
+	"keywords": [
+		"svelte",
+		"components",
+		"ui",
+		"ux",
+		"accessibility",
+		"a11y",
+		"library",
+		"sveltekit"
+	],
 	"bugs": {
-		"url" : "https://github.com/owner/project/issues"
+		"url": "https://github.com/owner/project/issues"
 	},
 	"license": "MIT",
 	"homepage": "",
@@ -42,6 +51,7 @@
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.10.1",
 		"publint": "^0.1.9",
+		"sass": "^1.63.6",
 		"svelte": "^4.0.0",
 		"svelte-check": "^3.4.3",
 		"tslib": "^2.4.1",

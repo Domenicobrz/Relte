@@ -1,21 +1,26 @@
 <script lang="ts">
 	import WheelPicker from '$lib/components/WheelPicker.svelte';
+
+	let values: string[] = [];
+	for (let i = 0; i < 50; i++) {
+		values.push('test ' + i);
+	}
 </script>
 
 <p>Components:</p>
-<WheelPicker
-	width="80px"
-	height="250px"
-	values={[
-		'test1',
-		'test2',
-		'test3',
-		'test4',
-		'test5',
-		'test6',
-		'test7',
-		'test8',
-		'test9',
-		'test10'
-	]}
-/>
+
+<div class="wheel-pickers-container">
+	<WheelPicker width="100px" height="250px" {values} />
+	<WheelPicker width="130px" height="150px" {values} />
+	<WheelPicker width="85px" height="450px" {values} />
+</div>
+
+<style lang="scss">
+	.wheel-pickers-container {
+		display: flex;
+
+		> :global(div) {
+			margin: 10px;
+		}
+	}
+</style>
