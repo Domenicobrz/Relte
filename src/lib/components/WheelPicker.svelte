@@ -6,12 +6,12 @@
 	export let height = '100%';
 	export let values: string[];
 
-	let entries: { label: string; visible: boolean; rotation: number; opacity: number }[];
+	let entries: { label: string; visible: boolean; rotation: number; scale: number }[];
 	$: entries = values.map((value, i) => ({
 		label: value,
 		visible: true,
 		rotation: -1,
-		opacity: 0
+		scale: 1
 	}));
 
 	let pointerData = {
@@ -89,7 +89,7 @@
 			entry.rotation = i * rotationOffsetPerEntry - pointerData.rotOffset;
 
 			if (entry.rotation > 90 || entry.rotation < -90) entry.visible = false;
-			entry.opacity = 1 - Math.pow(Math.abs(entry.rotation) / 90, 2);
+			entry.scale = 1 - Math.pow(Math.abs(entry.rotation) / 90, 2) * 0.4;
 		});
 		entries = entries;
 	}
@@ -113,13 +113,16 @@
 		{#if entry.visible}
 			<p
 				class="entry"
-				style:transform={`translateY(-50%) rotateX(${-entry.rotation}deg) translate3d(0, 0, ${perspectiveHeight}px)`}
-				style:opacity={entry.opacity}
+				style:transform={`translateY(-50%) rotateX(${-entry.rotation}deg) translate3d(0, 0, ${perspectiveHeight}px) scale(${
+					entry.scale
+				}) `}
 			>
 				{entry.label}
 			</p>
 		{/if}
 	{/each}
+	<div class="top-curtain curtain" />
+	<div class="bottom-curtain curtain" />
 </div>
 
 <style>
@@ -141,5 +144,21 @@
 		pointer-events: none;
 
 		text-align: center;
+	}
+
+	.curtain {
+		position: absolute;
+		width: 100%;
+		height: 45px;
+	}
+
+	.top-curtain {
+		top: 0;
+		background: linear-gradient(to bottom, #eee 0%, transparent);
+	}
+
+	.bottom-curtain {
+		bottom: 0;
+		background: linear-gradient(to top, #eee 0%, transparent);
 	}
 </style>

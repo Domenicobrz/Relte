@@ -8,7 +8,6 @@
 </script>
 
 <p>Components:</p>
-
 <div class="wheel-pickers-container">
 	<WheelPicker width="100px" height="250px" {values} />
 	<WheelPicker width="130px" height="150px" {values} />
