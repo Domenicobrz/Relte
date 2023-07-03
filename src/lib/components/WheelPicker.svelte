@@ -20,15 +20,50 @@
 		rotOffset: 0
 	};
 
+	let animData: { state: 'idle' | 'snap'; snapTo: number } = {
+		state: 'idle',
+		snapTo: -1
+	};
+
 	if (browser) {
-		let count = 0;
 		function animate() {
-			count++;
-			pointerData.rotOffset = Math.sin(count * 0.01) * 100;
+			// reset all animations if we're currently moving the wheel picker
+			if (pointerData.pointerStart !== -1) {
+				animData.state = 'idle';
+				animData.snapTo = -1;
+			}
+
+			const mod = pointerData.rotOffset % rotationOffsetPerEntry;
+			const isUnstable = mod > 0;
+
+			if (isUnstable && pointerData.pointerStart === -1 && animData.state == 'idle') {
+				animData.state = 'snap';
+
+				const at = mod;
+				// [0 ... 1]
+				const t = at / rotationOffsetPerEntry;
+				if (t < 0.5) {
+					animData.snapTo = pointerData.rotOffset - mod;
+				} else {
+					animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+				}
+			}
+
+			if (animData.state == 'snap') {
+				let delta = animData.snapTo - pointerData.rotOffset;
+				pointerData.rotOffset += delta * 0.075;
+
+				if (Math.abs(delta) < 0.1) {
+					pointerData.rotOffset = animData.snapTo;
+					animData.state = 'idle';
+					animData.snapTo = -1;
+				}
+			}
+
 			requestAnimationFrame(animate);
 		}
 
-		// requestAnimationFrame(animate);
+		requestAnimationFrame(animate);
 	}
 
 	function addRotationOffset(offset: number) {
