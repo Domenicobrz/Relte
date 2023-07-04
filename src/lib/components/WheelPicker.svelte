@@ -17,13 +17,16 @@
 	let pointerData = {
 		pointerStart: -1,
 		velocity: 0,
-		rotOffset: 0
+		rotOffset: 0,
+		direction: 0
 	};
 
-	let animData: { state: 'idle' | 'snap'; snapTo: number } = {
+	let animData: { state: 'idle' | 'snap' | 'inertia-rotation'; snapTo: number } = {
 		state: 'idle',
 		snapTo: -1
 	};
+
+	let entriesEls: HTMLParagraphElement[] = [];
 
 	if (browser) {
 		function animate() {
@@ -33,19 +36,28 @@
 				animData.snapTo = -1;
 			}
 
+			if (Math.abs(pointerData.velocity) > 0 && pointerData.pointerStart === -1) {
+				animData.state = 'inertia-rotation';
+
+				pointerData.velocity *= 0.95;
+				addRotationOffset(-pointerData.velocity * deltaSpeedAdjust);
+
+				if (Math.abs(pointerData.velocity) < 1) {
+					pointerData.velocity = 0;
+					animData.state = 'idle';
+				}
+			}
+
 			const mod = pointerData.rotOffset % rotationOffsetPerEntry;
 			const isUnstable = mod > 0;
 
 			if (isUnstable && pointerData.pointerStart === -1 && animData.state == 'idle') {
 				animData.state = 'snap';
 
-				const at = mod;
-				// [0 ... 1]
-				const t = at / rotationOffsetPerEntry;
-				if (t < 0.5) {
-					animData.snapTo = pointerData.rotOffset - mod;
-				} else {
+				if (pointerData.direction < 0) {
 					animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+				} else {
+					animData.snapTo = pointerData.rotOffset - mod;
 				}
 			}
 
@@ -64,6 +76,14 @@
 		}
 
 		requestAnimationFrame(animate);
+	}
+
+	function getScale(entry: (typeof entries)[0]): number {
+		return entry.scale + 0.1 * (1 - Math.min(Math.abs(entry.rotation), 5) / 5);
+	}
+
+	function getOpacity(offset: number): number {
+		return 1 - (0.6 * Math.min(Math.abs(offset), 5)) / 5;
 	}
 
 	function addRotationOffset(offset: number) {
@@ -85,36 +105,37 @@
 			let y = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
 			const delta = y - pointerData.pointerStart;
+			pointerData.direction = Math.sign(delta);
 			addRotationOffset(-delta * deltaSpeedAdjust);
 			pointerData.pointerStart = y;
+			pointerData.velocity = delta;
 		}
 	}
 
 	// v v v these variables depend on the height of the container v v v
-	let perspectiveHeight = 100;
+	let zTransl = 100;
+	let perspective = 0;
 	let rotationOffsetPerEntry = 0;
 	let deltaSpeedAdjust = 1;
+	let entryHeight = 0;
 	// ^ ^ ^ these variables depend on the height of the container ^ ^ ^
 	let containerEl: HTMLDivElement;
-	let ro: ResizeObserver; // Reference for ResizeObserver
+	let ro: ResizeObserver;
 
 	onMount(() => {
 		ro = new ResizeObserver((entries) => {
 			for (let entry of entries) {
-				perspectiveHeight = entry.contentRect.height * 0.5;
-				rotationOffsetPerEntry = 2500 / entry.contentRect.height;
-				deltaSpeedAdjust = 100 / entry.contentRect.height;
+				perspective = entry.contentRect.height * 0.95;
+				zTransl = entry.contentRect.height * 0.44;
+				rotationOffsetPerEntry = 2200 / entry.contentRect.height;
+				deltaSpeedAdjust = 60 / entry.contentRect.height;
 			}
 		});
-
 		ro.observe(containerEl);
 	});
 
 	onDestroy(() => {
-		// Disconnect ResizeObserver when the component is destroyed
-		if (ro) {
-			ro.disconnect();
-		}
+		if (ro) ro.disconnect();
 	});
 
 	// on pointer data change
@@ -124,9 +145,22 @@
 			entry.rotation = i * rotationOffsetPerEntry - pointerData.rotOffset;
 
 			if (entry.rotation > 90 || entry.rotation < -90) entry.visible = false;
-			entry.scale = 1 - Math.pow(Math.abs(entry.rotation) / 90, 2) * 0.4;
+			entry.scale = 1;
 		});
 		entries = entries;
+	}
+
+	$: {
+		// we need to calculate the height of the selection-highlight whenever entriesEls
+		// changes
+		let biggestHeight = 0;
+		entriesEls.forEach((el) => {
+			if (!el) return;
+
+			const currHeight = el.getBoundingClientRect().height;
+			if (currHeight > biggestHeight) biggestHeight = currHeight;
+		});
+		entryHeight = biggestHeight;
 	}
 </script>
 
@@ -141,16 +175,20 @@
 	class="container"
 	style:width
 	style:height
+	style:perspective={perspective + 'px'}
 	on:pointerdown={onPointerDown}
 	on:touchstart={onPointerDown}
 >
+	<div style:height={entryHeight + 5 + 'px'} class="selection-highlight" />
 	{#each entries as entry, i}
 		{#if entry.visible}
 			<p
 				class="entry"
-				style:transform={`translateY(-50%) rotateX(${-entry.rotation}deg) translate3d(0, 0, ${perspectiveHeight}px) scale(${
-					entry.scale
-				}) `}
+				bind:this={entriesEls[i]}
+				style:opacity={getOpacity(entry.rotation)}
+				style:transform={`translateY(-50%) rotateX(${-entry.rotation}deg) translate3d(0, 0, ${zTransl}px) scale(${getScale(
+					entry
+				)})`}
 			>
 				{entry.label}
 			</p>
@@ -171,7 +209,7 @@
 		width: 100%;
 		top: 50%;
 		position: absolute;
-		will-change: transform, opacity;
+		will-change: opacity;
 
 		margin: 0;
 
@@ -179,6 +217,10 @@
 		pointer-events: none;
 
 		text-align: center;
+
+		backface-visibility: hidden;
+
+		font-size: 10px;
 	}
 
 	.curtain {
@@ -195,5 +237,13 @@
 	.bottom-curtain {
 		bottom: 0;
 		background: linear-gradient(to top, #eee 0%, transparent);
+	}
+
+	.selection-highlight {
+		width: 100%;
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		background: #ddd;
 	}
 </style>
