@@ -176,7 +176,7 @@
 			const currHeight = el.getBoundingClientRect().height;
 			if (currHeight > biggestHeight) biggestHeight = currHeight;
 		});
-		entryHeight = biggestHeight;
+		entryHeight = biggestHeight + 2;
 	}
 </script>
 
@@ -216,9 +216,11 @@
 
 <style>
 	.container {
-		background: #eee;
+		background: #f8f8f8;
 		position: relative;
 		user-select: none;
+		border-radius: 6px;
+		overflow: hidden;
 	}
 
 	.entry {
@@ -247,12 +249,12 @@
 
 	.top-curtain {
 		top: 0;
-		background: linear-gradient(to bottom, #eee 0%, transparent);
+		background: linear-gradient(to bottom, #f0f0f0 0%, transparent);
 	}
 
 	.bottom-curtain {
 		bottom: 0;
-		background: linear-gradient(to top, #eee 0%, transparent);
+		background: linear-gradient(to top, #f0f0f0 0%, transparent);
 	}
 
 	.selection-highlight {
@@ -260,6 +262,8 @@
 		position: absolute;
 		top: 50%;
 		transform: translateY(-50%);
-		background: #ddd;
+		background: #f0f0f0;
+		border-top: 1px solid #ccc;
+		border-bottom: 1px solid #ccc;
 	}
 </style>
