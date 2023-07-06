@@ -1,0 +1,25 @@
+.container.inset-theme {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(0,0,0,0.05) inset;
+}
+
+.curtain.inset-theme {
+  height: 0px;
+}
+
+.top-curtain.inset-theme {
+  top: 0;
+  background: linear-gradient(to bottom, #f0f0f0 0%, transparent);
+}
+
+.bottom-curtain.inset-theme {
+  bottom: 0;
+  background: linear-gradient(to top, #f0f0f0 0%, transparent);
+}
+
+.selection-highlight.inset-theme {
+  background: none;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}

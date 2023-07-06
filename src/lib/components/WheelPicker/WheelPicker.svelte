@@ -5,6 +5,9 @@
 	export let width = '100%';
 	export let height = '100%';
 	export let values: string[];
+	export let theme: 'default' | 'inset' | 'none' | 'bard' = 'default';
+
+	$: themeName = theme + '-theme';
 
 	let entries: { label: string; visible: boolean; rotation: number; scale: number }[];
 	$: entries = values.map((value, i) => ({
@@ -188,18 +191,18 @@
 />
 <div
 	bind:this={containerEl}
-	class="container"
+	class="container {themeName}"
 	style:width
 	style:height
 	style:perspective={perspective + 'px'}
 	on:pointerdown={onPointerDown}
 	on:touchstart={onPointerDown}
 >
-	<div style:height={entryHeight + 5 + 'px'} class="selection-highlight" />
+	<div style:height={entryHeight + 5 + 'px'} class="selection-highlight {themeName}" />
 	{#each entries as entry, i}
 		{#if entry.visible}
 			<p
-				class="entry"
+				class="entry {themeName}"
 				bind:this={entriesEls[i]}
 				style:opacity={getOpacity(entry.rotation)}
 				style:transform={`translateY(-50%) rotateX(${-entry.rotation}deg) translate3d(0, 0, ${zTransl}px) scale(${getScale(
@@ -210,60 +213,13 @@
 			</p>
 		{/if}
 	{/each}
-	<div class="top-curtain curtain" />
-	<div class="bottom-curtain curtain" />
+	<div class="top-curtain curtain {themeName}" />
+	<div class="bottom-curtain curtain {themeName}" />
 </div>
 
 <style>
-	.container {
-		background: #f8f8f8;
-		position: relative;
-		user-select: none;
-		border-radius: 6px;
-		overflow: hidden;
-	}
-
-	.entry {
-		width: 100%;
-		top: 50%;
-		position: absolute;
-		will-change: opacity;
-
-		margin: 0;
-
-		user-select: none;
-		pointer-events: none;
-
-		text-align: center;
-
-		backface-visibility: hidden;
-
-		font-size: 10px;
-	}
-
-	.curtain {
-		position: absolute;
-		width: 100%;
-		height: 45px;
-	}
-
-	.top-curtain {
-		top: 0;
-		background: linear-gradient(to bottom, #f0f0f0 0%, transparent);
-	}
-
-	.bottom-curtain {
-		bottom: 0;
-		background: linear-gradient(to top, #f0f0f0 0%, transparent);
-	}
-
-	.selection-highlight {
-		width: 100%;
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		background: #f0f0f0;
-		border-top: 1px solid #ccc;
-		border-bottom: 1px solid #ccc;
-	}
+	@import './no-theme.scss';
+	@import './default-theme.scss';
+	@import './inset-theme.scss';
+	@import './bard-theme.scss';
 </style>

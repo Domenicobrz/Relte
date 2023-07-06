@@ -1,0 +1,48 @@
+
+.container {
+  position: relative;
+  user-select: none;
+}
+
+.entry {
+  width: 100%;
+  top: 50%;
+  position: absolute;
+  will-change: opacity;
+
+  margin: 0;
+
+  user-select: none;
+  pointer-events: none;
+
+  text-align: center;
+
+  backface-visibility: hidden;
+
+  font-size: 10px;
+}
+
+.curtain {
+  position: absolute;
+  width: 100%;
+  /* hidden by default style */
+  height: 0px;
+}
+
+.top-curtain {
+  top: 0;
+  background: linear-gradient(to bottom, #f0f0f0 0%, transparent);
+}
+
+.bottom-curtain {
+  bottom: 0;
+  background: linear-gradient(to top, #f0f0f0 0%, transparent);
+}
+
+.selection-highlight {
+  width: 100%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f0f0f0;
+}
