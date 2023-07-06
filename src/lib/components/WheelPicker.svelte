@@ -49,15 +49,26 @@
 			}
 
 			const mod = pointerData.rotOffset % rotationOffsetPerEntry;
-			const isUnstable = mod > 0;
+			// just doing mod > 0 isn't enough due to floating point precision
+			// issues where the modulo could stay fixed at e.g. 0.9999999999986
+			const isUnstable = mod > 0.0001 && mod < rotationOffsetPerEntry * 0.9999;
 
 			if (isUnstable && pointerData.pointerStart === -1 && animData.state == 'idle') {
 				animData.state = 'snap';
 
+				const t = mod / rotationOffsetPerEntry;
 				if (pointerData.direction < 0) {
-					animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+					if (t > 0.3) {
+						animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+					} else {
+						animData.snapTo = pointerData.rotOffset - mod;
+					}
 				} else {
-					animData.snapTo = pointerData.rotOffset - mod;
+					if (t < 0.7) {
+						animData.snapTo = pointerData.rotOffset - mod;
+					} else {
+						animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+					}
 				}
 			}
 
@@ -96,6 +107,7 @@
 	function onPointerDown(e: PointerEvent | TouchEvent) {
 		let y = 'touches' in e ? e.touches[0].clientY : e.clientY;
 		pointerData.pointerStart = y;
+		pointerData.direction = 0;
 	}
 	function onPointerUp() {
 		pointerData.pointerStart = -1;
@@ -105,7 +117,11 @@
 			let y = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
 			const delta = y - pointerData.pointerStart;
-			pointerData.direction = Math.sign(delta);
+			// here we're summing the direction instead of assigning -1 or +1
+			// because otherwise we can often get "0" as a result of small movements
+			// and that can break the modulo calculations to determine the snapping
+			// point
+			pointerData.direction += Math.sign(delta);
 			addRotationOffset(-delta * deltaSpeedAdjust);
 			pointerData.pointerStart = y;
 			pointerData.velocity = delta;
