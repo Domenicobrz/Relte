@@ -1,12 +1,37 @@
+<script context="module" lang="ts">
+	export type SelectedEventDetail = { value: string; index: number };
+</script>
+
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
+
+	const dispatch = createEventDispatcher<{ selected: SelectedEventDetail }>();
 
 	export let width = '100%';
 	export let height = '100%';
 	export let values: string[];
 	export let theme: 'default' | 'inset' | 'none' | 'bard' = 'default';
+	export let selected: string = values[0];
 
+	let selectedIndex = -1;
+	$: {
+		// svelte works in such a way that if selectedIndex remains the same,
+		// this snippet won't run again, as in, if the user re-selects the same element
+		// this snippet is not going to run again
+
+		// for the initial selection on component mount,
+		// don't animate to the newly selected index
+		if (selectedIndex === -1) {
+			selectedIndex = values.indexOf(selected);
+			pointerData.rotOffset = selectedIndex * rotationOffsetPerEntry;
+		} else {
+			// for new selections, animate to the new selected index
+			selectedIndex = values.indexOf(selected);
+			selectAndSnap(selectedIndex);
+		}
+	}
 	$: themeName = theme + '-theme';
 
 	let entries: { label: string; visible: boolean; rotation: number; scale: number }[];
@@ -60,17 +85,21 @@
 				animData.state = 'snap';
 
 				const t = mod / rotationOffsetPerEntry;
+
+				let currentIndex = Math.round((pointerData.rotOffset - mod) / rotationOffsetPerEntry);
+				currentIndex = Math.min(currentIndex, values.length - 1);
+
 				if (pointerData.direction < 0) {
 					if (t > 0.3) {
-						animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+						selectAndSnap(currentIndex + 1);
 					} else {
-						animData.snapTo = pointerData.rotOffset - mod;
+						selectAndSnap(currentIndex);
 					}
 				} else {
 					if (t < 0.7) {
-						animData.snapTo = pointerData.rotOffset - mod;
+						selectAndSnap(currentIndex);
 					} else {
-						animData.snapTo = pointerData.rotOffset - mod + rotationOffsetPerEntry;
+						selectAndSnap(currentIndex + 1);
 					}
 				}
 			}
@@ -129,6 +158,13 @@
 			pointerData.pointerStart = y;
 			pointerData.velocity = delta;
 		}
+	}
+
+	function selectAndSnap(newIndex: number) {
+		animData.state = 'snap';
+		animData.snapTo = newIndex * rotationOffsetPerEntry;
+
+		dispatch('selected', { value: values[newIndex], index: newIndex });
 	}
 
 	// v v v these variables depend on the height of the container v v v
