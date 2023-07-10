@@ -8,8 +8,8 @@
 		values.push('test ' + i);
 	}
 
-	let selected = values[0];
-	let selectedIndex = 0;
+	let selectedIndex = 25;
+	let selected = values[selectedIndex];
 
 	function onSelected(event: CustomEvent<SelectedEventDetail>) {
 		let { value, index } = event.detail;
@@ -23,22 +23,19 @@
 	<WheelPicker
 		on:selected={onSelected}
 		{selected}
-		width="100px"
-		height="250px"
+		width="180px"
+		height="300px"
 		{values}
 		theme="default"
 	/>
-	<WheelPicker selected="test 25" width="130px" height="150px" {values} theme="default" />
-	<WheelPicker selected="test 25" width="85px" height="450px" {values} theme="default" />
-	<WheelPicker selected="test 25" width="285px" height="250px" {values} theme="default" />
 </div>
-<p>First wheel picker has selected: {selected}, with index: {selectedIndex}</p>
+<p class="centered">Selected value: {selected}, with index: {selectedIndex}</p>
 <h3>Wheel Picker themes:</h3>
 <div class="wheel-pickers-container">
-	<WheelPicker width="160px" height="250px" {values} theme="none" />
-	<WheelPicker width="160px" height="250px" {values} theme="default" />
-	<WheelPicker width="160px" height="250px" {values} theme="inset" />
-	<WheelPicker width="160px" height="250px" {values} theme="bard" />
+	<WheelPicker {selected} width="160px" height="250px" {values} theme="none" />
+	<WheelPicker {selected} width="160px" height="250px" {values} theme="default" />
+	<WheelPicker {selected} width="160px" height="250px" {values} theme="inset" />
+	<WheelPicker {selected} width="160px" height="250px" {values} theme="bard" />
 </div>
 <h2>TODO:</h2>
 <p>selection / events functionality</p>
@@ -56,5 +53,9 @@
 		> :global(div) {
 			margin: 10px;
 		}
+	}
+
+	.centered {
+		text-align: center;
 	}
 </style>
