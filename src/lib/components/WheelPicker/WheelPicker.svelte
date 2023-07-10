@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { onMount, onDestroy } from 'svelte';
-	import { browser } from '$app/environment';
+	import { BROWSER } from 'esm-env';
 
 	const dispatch = createEventDispatcher<{ selected: SelectedEventDetail }>();
 
@@ -15,21 +15,24 @@
 	export let theme: 'default' | 'inset' | 'none' | 'bard' = 'default';
 	export let selected: string = values[0];
 
-	let selectedIndex = -1;
+	let prevSelected: (typeof values)[0] | null = null;
 	$: {
 		// svelte works in such a way that if selectedIndex remains the same,
 		// this snippet won't run again, as in, if the user re-selects the same element
 		// this snippet is not going to run again
 
-		// for the initial selection on component mount,
-		// don't animate to the newly selected index
-		if (selectedIndex === -1) {
-			selectedIndex = values.indexOf(selected);
-			pointerData.rotOffset = selectedIndex * rotationOffsetPerEntry;
-		} else {
+		let selectedIndex = values.indexOf(selected);
+
+		// we need the rotationOffs check since it's initialized onMount
+		if (prevSelected == null && rotationOffsetPerEntry > 0) {
+			// for the initial selection on component mount,
+			// don't animate to the newly selected index
+			selectAndSnap(selectedIndex, true);
+			prevSelected = selected;
+		} else if (prevSelected !== null && prevSelected !== selected) {
 			// for new selections, animate to the new selected index
-			selectedIndex = values.indexOf(selected);
 			selectAndSnap(selectedIndex);
+			prevSelected = selected;
 		}
 	}
 	$: themeName = theme + '-theme';
@@ -49,14 +52,19 @@
 		direction: 0
 	};
 
-	let animData: { state: 'idle' | 'snap' | 'inertia-rotation'; snapTo: number } = {
+	let animData: {
+		state: 'idle' | 'snap' | 'inertia-rotation';
+		snapTo: number;
+		instantSnap: boolean;
+	} = {
 		state: 'idle',
-		snapTo: -1
+		snapTo: -1,
+		instantSnap: false
 	};
 
 	let entriesEls: HTMLParagraphElement[] = [];
 
-	if (browser) {
+	if (BROWSER) {
 		function animate() {
 			// reset all animations if we're currently moving the wheel picker
 			if (pointerData.pointerStart !== -1) {
@@ -70,6 +78,18 @@
 				pointerData.velocity *= 0.95;
 				addRotationOffset(-pointerData.velocity * deltaSpeedAdjust);
 
+				const rotationLimit = rotationOffsetPerEntry * (values.length - 1);
+
+				// if we move fast enough to hit the boundaries, select and snap
+				if (pointerData.rotOffset === 0) {
+					pointerData.velocity = 0;
+					selectAndSnap(0, true);
+				}
+				if (pointerData.rotOffset > rotationLimit - 0.00001) {
+					pointerData.velocity = 0;
+					selectAndSnap(values.length - 1, true);
+				}
+
 				if (Math.abs(pointerData.velocity) < 1) {
 					pointerData.velocity = 0;
 					animData.state = 'idle';
@@ -79,7 +99,7 @@
 			const mod = pointerData.rotOffset % rotationOffsetPerEntry;
 			// just doing mod > 0 isn't enough due to floating point precision
 			// issues where the modulo could stay fixed at e.g. 0.9999999999986
-			const isUnstable = mod > 0.0001 && mod < rotationOffsetPerEntry * 0.9999;
+			const isUnstable = mod > 0.00001 && mod < rotationOffsetPerEntry - 0.00001;
 
 			if (isUnstable && pointerData.pointerStart === -1 && animData.state == 'idle') {
 				animData.state = 'snap';
@@ -106,7 +126,8 @@
 
 			if (animData.state == 'snap') {
 				let delta = animData.snapTo - pointerData.rotOffset;
-				pointerData.rotOffset += delta * 0.075;
+
+				pointerData.rotOffset += animData.instantSnap ? delta : delta * 0.075;
 
 				if (Math.abs(delta) < 0.1) {
 					pointerData.rotOffset = animData.snapTo;
@@ -148,7 +169,20 @@
 		if (pointerData.pointerStart > -1) {
 			let y = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
-			const delta = y - pointerData.pointerStart;
+			let delta = y - pointerData.pointerStart;
+
+			// we always need a bit of velocity (doesn't matter the direction)
+			// to prevent this edge case:
+			// user has selected index 1, then scrolls up until it hit the boundaries
+			// at the beginning of the wheel picker container,
+			// and then moves sideways in the x direction. Velocity would turn out to be 0,
+			// and we wouldn't trigger the conditions inside animate() that would trigger
+			// a new selection. Same applies when we hit the other side of the boundary
+			// at the end of the container
+			if (delta === 0) {
+				delta = 0.0001;
+			}
+
 			// here we're summing the direction instead of assigning -1 or +1
 			// because otherwise we can often get "0" as a result of small movements
 			// and that can break the modulo calculations to determine the snapping
@@ -160,9 +194,10 @@
 		}
 	}
 
-	function selectAndSnap(newIndex: number) {
+	function selectAndSnap(newIndex: number, instantSnap: boolean = false) {
 		animData.state = 'snap';
 		animData.snapTo = newIndex * rotationOffsetPerEntry;
+		animData.instantSnap = instantSnap;
 
 		dispatch('selected', { value: values[newIndex], index: newIndex });
 	}

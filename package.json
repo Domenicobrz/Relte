@@ -16,9 +16,9 @@
 		"url": "https://github.com/owner/project/issues"
 	},
 	"license": "MIT",
-	"homepage": "",
+	"homepage": "https://github.com/Domenicobrz/Relte",
 	"author": "Domenico Bruzzese <domenicobrz@gmail.com> (http://domenicobrz.github.io)",
-	"repository": "url",
+	"repository": "https://github.com/Domenicobrz/Relte",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -48,6 +48,7 @@
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.20.4",
 		"@sveltejs/package": "^2.0.0",
+		"esm-env": "^1.0.0",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.10.1",
 		"publint": "^0.1.9",

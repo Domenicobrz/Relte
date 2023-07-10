@@ -31,12 +31,12 @@
 </div>
 <p class="centered">Selected value: {selected}, with index: {selectedIndex}</p>
 <h3>Wheel Picker themes:</h3>
-<div class="wheel-pickers-container">
-	<WheelPicker {selected} width="160px" height="250px" {values} theme="none" />
-	<WheelPicker {selected} width="160px" height="250px" {values} theme="default" />
-	<WheelPicker {selected} width="160px" height="250px" {values} theme="inset" />
-	<WheelPicker {selected} width="160px" height="250px" {values} theme="bard" />
-</div>
+<!-- <div class="wheel-pickers-container">
+	<WheelPicker width="160px" height="250px" {values} theme="none" />
+	<WheelPicker width="160px" height="250px" {values} theme="default" />
+	<WheelPicker width="160px" height="250px" {values} theme="inset" />
+	<WheelPicker width="160px" height="250px" {values} theme="bard" />
+</div> -->
 <h2>TODO:</h2>
 <p>selection / events functionality</p>
 <p>accessibility</p>
